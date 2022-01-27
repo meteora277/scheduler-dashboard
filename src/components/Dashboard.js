@@ -26,15 +26,35 @@ const data = [
     value: "2.3"
   }
 ];
-const panels = data.map((panel) => {
-  return <Panel key={panel.id} label={panel.label} value={panel.value} />;
-});
 
 class Dashboard extends Component {
-  state = { loading: false };
+  state = {
+    loading: false,
+    focused: null
+  };
+
+  selectPanel = (id) => {
+    this.setState(prev => ({ focused: prev.focused !== null ? null : id }));
+  };
 
   render() {
-    const dashboardClasses = classnames("dashboard");
+    const dashboardClasses = classnames("dashboard", {
+      "dashboard--focused": this.state.focused
+    });
+    const panels = data
+      .filter((panel) => {
+        return this.state.focused === null || this.state.focused === panel.id;
+      })
+      .map((panel) => {
+        return (
+          <Panel
+            key={panel.id}
+            label={panel.label}
+            value={panel.value}
+            onSelect={() => this.selectPanel(panel.id)}
+          />
+        );
+      });
 
     return (
       <section>
