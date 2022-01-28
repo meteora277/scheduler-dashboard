@@ -10,6 +10,7 @@ import {
   getMostPopularDay,
   getTotalInterviews
 } from "helpers/selectors";
+import { setInterview } from "helpers/reducers";
 
 class Dashboard extends Component {
   state = {
@@ -42,13 +43,26 @@ class Dashboard extends Component {
         appointments: appointments.data,
         interviewers: interviewers.data
       });
+      
     });
+    this.socket = new WebSocket(process.env.REACT_APP_WEBSOCKET_URL)
+    this.socket.onmessage = event => {
+      const data = JSON.parse(event.data);
+    
+      if (typeof data === "object" && data.type === "SET_INTERVIEW") {
+        this.setState(previousState =>
+          setInterview(previousState, data.id, data.interview)
+        );
+      }
+    };
   }
-
   componentDidUpdate(prevState) {
     if (prevState.focused !== this.state.focused) {
       localStorage.setItem("focused", JSON.stringify(this.state.focused));
     }
+  }
+  componentWillUnmount() {
+    this.socket.close()
   }
 
   render() {
@@ -88,7 +102,7 @@ class Dashboard extends Component {
           <Panel
             key={panel.id}
             label={panel.label}
-            value={panel.value}
+            value={panel.getValue(this.state)}
             onSelect={() => this.selectPanel(panel.id)}
           />
         );
